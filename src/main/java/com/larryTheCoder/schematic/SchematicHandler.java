@@ -494,18 +494,36 @@ public final class SchematicHandler {
             return true;
         }
 
-        List<IslandBlock> blocks = getIslandBlocks(id);
-        try {
-            for (IslandBlock block : blocks) {
-                block.paste(p, pos, biome);
+        if (!pos.getLevel().getChunk(((int) pos.getX()) >> 4, ((int) pos.getZ()) >> 4).isGenerated()) {
+            try {
+                pos.getLevel().getChunk(((int) pos.getX()) >> 4, ((int) pos.getZ()) >> 4).load(true);
+            } catch (IOException e) {
+                e.fillInStackTrace();
             }
-        } catch (Exception ex) {
-            p.sendMessage(plugin.getPrefix() + plugin.getLocale(p).errorIslandPC);
-            // Fail-Safe
-            for (IslandBlock block : blocks) {
-                block.revert(pos);
+        }
+
+        if (!pos.getLevel().getChunk(((int) pos.getX()) >> 4, ((int) pos.getZ()) >> 4).isLoaded()) {
+            try {
+                pos.getLevel().getChunk(((int) pos.getX()) >> 4, ((int) pos.getZ()) >> 4).load(true);
+            } catch (IOException e) {
+                e.fillInStackTrace();
             }
-            return false;
+        }
+
+        if (pos.getLevel().getChunk(((int) pos.getX()) >> 4, ((int) pos.getZ()) >> 4).isLoaded()) {
+            List<IslandBlock> blocks = getIslandBlocks(id);
+            try {
+                for (IslandBlock block : blocks) {
+                    block.paste(p, pos, biome);
+                }
+            } catch (Exception ex) {
+                p.sendMessage(plugin.getPrefix() + plugin.getLocale(p).errorIslandPC);
+                // Fail-Safe
+                for (IslandBlock block : blocks) {
+                    block.revert(pos);
+                }
+                return false;
+            }
         }
         return true;
     }
