@@ -21,7 +21,7 @@ import cn.nukkit.Server;
 import cn.nukkit.command.CommandSender;
 import cn.nukkit.level.Level;
 import cn.nukkit.level.Location;
-import cn.nukkit.level.biome.EnumBiome;
+import cn.nukkit.level.generator.biome.Biome;
 import cn.nukkit.math.Vector3;
 import cn.nukkit.utils.TextFormat;
 import com.larryTheCoder.ASkyBlock;
@@ -158,10 +158,10 @@ public class IslandManager {
     }
 
     private void createIsland(Player p, int templateId, String home) {
-        this.createIsland(p, templateId, home, plugin.getDefaultWorld(), false, EnumBiome.PLAINS, false);
+        this.createIsland(p, templateId, home, plugin.getDefaultWorld(), false, Biome.getBiome(Biome.PLAINS), false);
     }
 
-    public void createIsland(Player p, int templateId, String levelName, String home, boolean locked, EnumBiome biome, boolean teleport) {
+    public void createIsland(Player p, int templateId, String levelName, String home, boolean locked, Biome biome, boolean teleport) {
         if (Settings.useEconomy) {
             double money = ASkyBlock.econ.getMoney(p);
             if (Settings.islandCost > money && Settings.islandCost != money) {

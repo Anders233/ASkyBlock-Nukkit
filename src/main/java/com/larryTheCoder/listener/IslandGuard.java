@@ -1397,21 +1397,6 @@ public class IslandGuard implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-    public void onPlayerCommand(PlayerCommandPreprocessEvent ex) {
-        Player p = ex.getPlayer();
-        String command = ex.getMessage().substring(1);
-        if (!inWorld(p) && !Settings.bannedCommands.contains(command)) {
-            return;
-        }
-        if (p.isOp()) {
-            p.sendMessage(plugin.getLocale(p).adminOverride);
-            return;
-        }
-        p.sendMessage(plugin.getLocale(p).errorCommandBlocked);
-        ex.setCancelled();
-    }
-
     private String getPrefix() {
         return plugin.getPrefix();
     }

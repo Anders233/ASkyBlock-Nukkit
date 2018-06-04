@@ -24,8 +24,8 @@ import cn.nukkit.blockentity.BlockEntityChest;
 import cn.nukkit.item.Item;
 import cn.nukkit.level.Level;
 import cn.nukkit.level.Position;
-import cn.nukkit.level.biome.EnumBiome;
 import cn.nukkit.level.format.generic.BaseFullChunk;
+import cn.nukkit.level.generator.biome.Biome;
 import cn.nukkit.level.generator.object.tree.ObjectTree;
 import cn.nukkit.math.NukkitRandom;
 import cn.nukkit.math.Vector3;
@@ -487,7 +487,7 @@ public final class SchematicHandler {
      * @param id    The island id
      * @return True if the player island were generated|null
      */
-    public boolean pasteSchematic(Player p, Position pos, int id, EnumBiome biome) {
+    public boolean pasteSchematic(Player p, Position pos, int id, Biome biome) {
         // Usually this will be detected by this system
         if (isUseDefaultGeneration() || islandBlocks.get(id) == null) {
             createIsland(pos);

@@ -19,9 +19,9 @@ package com.larryTheCoder;
 import cn.nukkit.block.Block;
 import cn.nukkit.level.ChunkManager;
 import cn.nukkit.level.Level;
-import cn.nukkit.level.biome.EnumBiome;
 import cn.nukkit.level.format.generic.BaseFullChunk;
 import cn.nukkit.level.generator.Generator;
+import cn.nukkit.level.generator.biome.Biome;
 import cn.nukkit.math.NukkitRandom;
 import cn.nukkit.math.Vector3;
 import com.larryTheCoder.storage.WorldSettings;
@@ -56,7 +56,7 @@ public class SkyBlockGenerator extends Generator {
         BaseFullChunk chunk = level.getChunk(chunkX, chunkZ);
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
-                chunk.setBiomeId(x, z, EnumBiome.PLAINS.id);
+                chunk.setBiomeId(x, z, Biome.PLAINS);
             }
         }
 

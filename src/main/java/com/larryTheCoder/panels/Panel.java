@@ -29,7 +29,7 @@ import cn.nukkit.form.response.FormResponseSimple;
 import cn.nukkit.form.window.FormWindowCustom;
 import cn.nukkit.form.window.FormWindowModal;
 import cn.nukkit.form.window.FormWindowSimple;
-import cn.nukkit.level.biome.EnumBiome;
+import cn.nukkit.level.generator.biome.Biome;
 import com.larryTheCoder.ASkyBlock;
 import com.larryTheCoder.locales.ASlocales;
 import com.larryTheCoder.schematic.SchematicHandler;
@@ -105,7 +105,7 @@ public class Panel implements Listener {
 
                 boolean teleport = response.getToggleResponse(responseId);
 
-                plugin.getIsland().createIsland(p, id, worldName, islandName, locked, EnumBiome.PLAINS, teleport);
+                plugin.getIsland().createIsland(p, id, worldName, islandName, locked, Biome.getBiome(Biome.PLAINS), teleport);
                 panelDataId.remove(formId);
                 break;
             // Challenges data

@@ -21,9 +21,8 @@ import cn.nukkit.Player;
 import cn.nukkit.command.CommandSender;
 import cn.nukkit.level.Level;
 import cn.nukkit.level.Position;
-import cn.nukkit.level.biome.Biome;
-import cn.nukkit.level.biome.EnumBiome;
 import cn.nukkit.level.format.generic.BaseFullChunk;
+import cn.nukkit.level.generator.biome.Biome;
 import cn.nukkit.scheduler.NukkitRunnable;
 import cn.nukkit.scheduler.Task;
 import com.larryTheCoder.ASkyBlock;
@@ -117,11 +116,10 @@ class UpdateBiomeTask extends Task {
      * @return Biome. Null - when biome was not found
      */
     private Biome getBiome(String name) {
-        for (Biome biome : Biome.biomes) {
-            if (biome != null) {
-                if (biome.getName().equalsIgnoreCase(name.replace("_", " "))) return biome;
-            }
+        Biome biome = Biome.getBiome(name);
+        if (biome != null) {
+            if (biome.getName().equalsIgnoreCase(name.replace("_", " "))) return biome;
         }
-        return EnumBiome.PLAINS.biome;
+        return Biome.getBiome(Biome.PLAINS);
     }
 }
