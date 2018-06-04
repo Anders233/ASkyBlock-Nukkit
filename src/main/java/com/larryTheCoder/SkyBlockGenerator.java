@@ -60,15 +60,10 @@ public class SkyBlockGenerator extends Generator {
             }
         }
 
-        WorldSettings settings = ASkyBlock.get().getSettings(chunk.getProvider().getLevel().getName());
-        // Sometime it could be null.
-        if (settings == null) {
-            return;
-        }
         // making island in this section has been removed
         for (int x = 0; x < 16; x++) {
             for (int z = 0; z < 16; z++) {
-                for (int y = 0; y < settings.getSeaLevel(); y++) {
+                for (int y = 0; y < 3; y++) {
                     chunk.setBlock(x, y, z, Block.STILL_WATER); // Water Allows stuff
                     // to fall through into oblivion, thus keeping lag to a minimum
                 }
