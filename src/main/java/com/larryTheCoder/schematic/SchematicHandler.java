@@ -17,6 +17,7 @@
 package com.larryTheCoder.schematic;
 
 import cn.nukkit.Player;
+import cn.nukkit.Server;
 import cn.nukkit.block.Block;
 import cn.nukkit.block.BlockSapling;
 import cn.nukkit.blockentity.BlockEntity;
@@ -29,6 +30,8 @@ import cn.nukkit.level.generator.biome.Biome;
 import cn.nukkit.level.generator.object.tree.ObjectTree;
 import cn.nukkit.math.NukkitRandom;
 import cn.nukkit.math.Vector3;
+import cn.nukkit.scheduler.AsyncTask;
+import cn.nukkit.scheduler.Task;
 import cn.nukkit.utils.Config;
 import cn.nukkit.utils.ConfigSection;
 import cn.nukkit.utils.TextFormat;
@@ -43,6 +46,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.*;
+
+import static com.larryTheCoder.utils.Utils.loadChunkAt;
 
 /**
  * Author: Adam Matthew
@@ -494,36 +499,19 @@ public final class SchematicHandler {
             return true;
         }
 
-        if (!pos.getLevel().getChunk(((int) pos.getX()) >> 4, ((int) pos.getZ()) >> 4).isGenerated()) {
-            try {
-                pos.getLevel().getChunk(((int) pos.getX()) >> 4, ((int) pos.getZ()) >> 4).load(true);
-            } catch (IOException e) {
-                e.fillInStackTrace();
-            }
-        }
+        List<IslandBlock> blocks = getIslandBlocks(id);
 
-        if (!pos.getLevel().getChunk(((int) pos.getX()) >> 4, ((int) pos.getZ()) >> 4).isLoaded()) {
-            try {
-                pos.getLevel().getChunk(((int) pos.getX()) >> 4, ((int) pos.getZ()) >> 4).load(true);
-            } catch (IOException e) {
-                e.fillInStackTrace();
+        try {
+            for (IslandBlock block : blocks) {
+                block.paste(p, pos, biome);
             }
-        }
-
-        if (pos.getLevel().getChunk(((int) pos.getX()) >> 4, ((int) pos.getZ()) >> 4).isLoaded()) {
-            List<IslandBlock> blocks = getIslandBlocks(id);
-            try {
-                for (IslandBlock block : blocks) {
-                    block.paste(p, pos, biome);
-                }
-            } catch (Exception ex) {
-                p.sendMessage(plugin.getPrefix() + plugin.getLocale(p).errorIslandPC);
-                // Fail-Safe
-                for (IslandBlock block : blocks) {
-                    block.revert(pos);
-                }
-                return false;
+        } catch (Exception ex) {
+            p.sendMessage(plugin.getPrefix() + plugin.getLocale(p).errorIslandPC);
+            // Fail-Safe
+            for (IslandBlock block : blocks) {
+                block.revert(pos);
             }
+            return false;
         }
         return true;
     }
@@ -713,47 +701,66 @@ public final class SchematicHandler {
 
         // Done making island base Joe! Now we place the sweets (Tree)
         ObjectTree.growTree(world, X, groundHeight + 7, Z, new NukkitRandom(), BlockSapling.OAK);
-
-        this.initChest(world, X, groundHeight + 7, Z + 1);
+        initChest(world, X, groundHeight + 7, Z + 1);
     }
 
     private void initChest(Level lvl, int x, int y, int z) {
         BaseFullChunk chunk = lvl.getChunk(x >> 4, z >> 4);
-        lvl.setBlockIdAt(x, y, z, Block.CHEST);
 
-        cn.nukkit.nbt.tag.CompoundTag nbt = new cn.nukkit.nbt.tag.CompoundTag()
-                .putList(new cn.nukkit.nbt.tag.ListTag<>("Items"))
-                .putString("id", BlockEntity.CHEST)
-                .putInt("x", x)
-                .putInt("y", y)
-                .putInt("z", z);
-
-        BlockEntityChest e = new BlockEntityChest(chunk, nbt);
-        lvl.addBlockEntity(e);
-        e.spawnToAll();
-
-        // Items
-        if (Settings.chestItems.length != 0) {
-            int count = 0;
-            for (Item item : Settings.chestItems) {
-                e.getInventory().setItem(count, item);
-                count++;
+        while (!chunk.isLoaded()) {
+            try {
+                chunk.load(true);
+            } catch (IOException e) {
+                e.fillInStackTrace();
             }
-        } else {
-            Map<Integer, Item> items = new HashMap<>();
-            items.put(0, Item.get(Item.ICE, 0, 2));
-            items.put(1, Item.get(Item.BUCKET, 10, 1));
-            items.put(2, Item.get(Item.BONE, 0, 2));
-            items.put(3, Item.get(Item.SUGARCANE, 0, 1));
-            items.put(4, Item.get(Item.RED_MUSHROOM, 0, 1));
-            items.put(5, Item.get(Item.BROWN_MUSHROOM, 0, 2));
-            items.put(6, Item.get(Item.PUMPKIN_SEEDS, 0, 2));
-            items.put(7, Item.get(Item.MELON, 0, 1));
-            items.put(8, Item.get(Item.SAPLING, 0, 1));
-            items.put(9, Item.get(Item.STRING, 0, 12));
-            items.put(10, Item.get(Item.POISONOUS_POTATO, 0, 32));
-            items.put(11, Item.get(Item.CACTUS, 0, 1));
-            e.getInventory().setContents(items);
+        }
+
+        while (chunk.isLoaded()) {
+
+            Server.getInstance().getScheduler().scheduleDelayedTask(new Task() {
+                @Override
+                public void onRun(int i) {
+
+                    Block chest = Block.get(Block.CHEST);
+                    lvl.setBlock(new Vector3(x, y, z), chest, true, true);
+
+                    Map<Integer, Item> items = new HashMap<>();
+                    items.put(0, Item.get(Item.ICE, 0, 2));
+                    items.put(1, Item.get(Item.BUCKET, 10, 1));
+                    items.put(2, Item.get(Item.BONE, 0, 2));
+                    items.put(3, Item.get(Item.SUGARCANE, 0, 1));
+                    items.put(4, Item.get(Item.RED_MUSHROOM, 0, 1));
+                    items.put(5, Item.get(Item.BROWN_MUSHROOM, 0, 2));
+                    items.put(6, Item.get(Item.SEEDS, 0, 2));
+                    items.put(7, Item.get(Item.PUMPKIN_SEEDS, 0, 2));
+                    items.put(8, Item.get(Item.MELON, 0, 1));
+                    items.put(9, Item.get(Item.SAPLING, 0, 1));
+                    items.put(10, Item.get(Item.STRING, 0, 12));
+                    items.put(11, Item.get(Item.POISONOUS_POTATO, 0, 32));
+                    items.put(12, Item.get(Item.CACTUS, 0, 1));
+
+                    cn.nukkit.nbt.tag.CompoundTag nbt = new cn.nukkit.nbt.tag.CompoundTag()
+                            .putList(
+                                    new cn.nukkit.nbt.tag.ListTag<>("Items"))
+                            .putString("id", BlockEntity.CHEST)
+                            .putInt("x", x)
+                            .putInt("y", y)
+                            .putInt("z", z);
+
+                    BlockEntity b = BlockEntity.createBlockEntity(BlockEntity.CHEST, chunk, nbt);
+
+                    System.out.println("Bla bla 1");
+
+                    if (b instanceof BlockEntityChest) {
+                        System.out.println("Bla bla 2");
+                        BlockEntityChest blockEntityChest = (BlockEntityChest) b;
+                        blockEntityChest.getInventory().setContents(items);
+                        blockEntityChest.spawnToAll();
+                    }
+                }
+            }, 20 * 5);
+
+            break;
         }
 
     }

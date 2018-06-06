@@ -29,6 +29,7 @@ import cn.nukkit.level.Position;
 import cn.nukkit.level.format.generic.BaseFullChunk;
 import cn.nukkit.level.generator.biome.Biome;
 import cn.nukkit.math.Vector3;
+import cn.nukkit.scheduler.Task;
 import cn.nukkit.utils.MainLogger;
 import cn.nukkit.utils.TextFormat;
 import com.larryTheCoder.ASkyBlock;
@@ -414,68 +415,95 @@ class IslandBlock extends BlockMinecraftId {
         blockLoc.getLevel().setBlock(loc, Block.get(typeId, data), true, true);
         blockLoc.getLevel().setBiomeId(loc.getFloorX(), loc.getFloorZ(), (byte) biome.getId());
 
-        // BlockEntities
-        if (signText != null) {
-            // Various bug fixed (Nukkit bug)
-            BaseFullChunk chunk = blockLoc.getLevel().getChunk(loc.getFloorX() >> 4, loc.getFloorZ() >> 4);
-            cn.nukkit.nbt.tag.CompoundTag nbt = new cn.nukkit.nbt.tag.CompoundTag()
-                    .putList(new cn.nukkit.nbt.tag.ListTag<>("Items"))
-                    .putString("id", BlockEntity.SIGN)
-                    .putInt("x", (int) loc.x)
-                    .putInt("y", (int) loc.y)
-                    .putInt("z", (int) loc.z)
-                    .putString("Text1", signText.get(0).replace("[player]", p.getName()))
-                    .putString("Text2", signText.get(1).replace("[player]", p.getName()))
-                    .putString("Text3", signText.get(2).replace("[player]", p.getName()))
-                    .putString("Text4", signText.get(3).replace("[player]", p.getName()));
+        while (!blockLoc.getLevel().getChunk((int) blockLoc.getX() >> 4, (int) blockLoc.getZ() >> 4).isLoaded()) {
+            loadChunkAt(loc);
+        }
 
-            BlockEntitySign e = (BlockEntitySign) BlockEntity.createBlockEntity(
-                    BlockEntity.SIGN,
-                    chunk,
-                    nbt);
+        while (blockLoc.getLevel().getChunk((int) blockLoc.getX() >> 4, (int) blockLoc.getZ() >> 4).isLoaded()) {
 
-            blockLoc.getLevel().addBlockEntity(e);
-            e.spawnToAll();
-        } else if (potItem != null) {
-            BaseFullChunk chunk = blockLoc.getLevel().getChunk(loc.getFloorX() >> 4, loc.getFloorZ() >> 4);
-            cn.nukkit.nbt.tag.CompoundTag nbt = new cn.nukkit.nbt.tag.CompoundTag()
-                    .putString("id", BlockEntity.FLOWER_POT)
-                    .putInt("x", (int) loc.x)
-                    .putInt("y", (int) loc.y)
-                    .putInt("z", (int) loc.z)
-                    .putShort("item", potItem.getId())
-                    .putInt("data", potItemData);
+            // BlockEntities
+            if (signText != null) {
+                // Various bug fixed (Nukkit bug)
+                BaseFullChunk chunk = blockLoc.getLevel().getChunk(loc.getFloorX() >> 4, loc.getFloorZ() >> 4);
+                cn.nukkit.nbt.tag.CompoundTag nbt = new cn.nukkit.nbt.tag.CompoundTag()
+                        .putList(new cn.nukkit.nbt.tag.ListTag<>("Items"))
+                        .putString("id", BlockEntity.SIGN)
+                        .putInt("x", (int) loc.x)
+                        .putInt("y", (int) loc.y)
+                        .putInt("z", (int) loc.z)
+                        .putString("Text1", signText.get(0).replace("[player]", p.getName()))
+                        .putString("Text2", signText.get(1).replace("[player]", p.getName()))
+                        .putString("Text3", signText.get(2).replace("[player]", p.getName()))
+                        .putString("Text4", signText.get(3).replace("[player]", p.getName()));
 
-            BlockEntityFlowerPot potBlock = (BlockEntityFlowerPot) BlockEntity.createBlockEntity(
-                    BlockEntity.FLOWER_POT,
-                    chunk,
-                    nbt);
+                BlockEntitySign e = (BlockEntitySign) BlockEntity.createBlockEntity(
+                        BlockEntity.SIGN,
+                        chunk,
+                        nbt);
 
-            blockLoc.getLevel().addBlockEntity(potBlock);
-        } else if (Block.get(typeId, data).getId() == Block.CHEST) {
-            BaseFullChunk chunk = blockLoc.getLevel().getChunk(loc.getFloorX() >> 4, loc.getFloorZ() >> 4);
-            cn.nukkit.nbt.tag.CompoundTag nbt = new cn.nukkit.nbt.tag.CompoundTag()
-                    .putList(new cn.nukkit.nbt.tag.ListTag<>("Items"))
-                    .putString("id", BlockEntity.CHEST)
-                    .putInt("x", (int) loc.x)
-                    .putInt("y", (int) loc.y)
-                    .putInt("z", (int) loc.z);
-            BlockEntityChest e = (BlockEntityChest) BlockEntity.createBlockEntity(
-                    BlockEntity.CHEST,
-                    chunk,
-                    nbt);
-            if (ASkyBlock.get().getSchematics().isUsingDefaultChest(islandId) || chestContents.isEmpty()) {
-                int count = 0;
-                for (Item item : Settings.chestItems) {
-                    e.getInventory().setItem(count, item);
-                    count++;
-                }
-            } else {
-                e.getInventory().setContents(chestContents);
+                loadChunkAt(loc);
+
+                blockLoc.getLevel().addBlockEntity(e);
+                e.spawnToAll();
+
             }
+            if (potItem != null) {
+                BaseFullChunk chunk = blockLoc.getLevel().getChunk(loc.getFloorX() >> 4, loc.getFloorZ() >> 4);
+                cn.nukkit.nbt.tag.CompoundTag nbt = new cn.nukkit.nbt.tag.CompoundTag()
+                        .putString("id", BlockEntity.FLOWER_POT)
+                        .putInt("x", (int) loc.x)
+                        .putInt("y", (int) loc.y)
+                        .putInt("z", (int) loc.z)
+                        .putShort("item", potItem.getId())
+                        .putInt("data", potItemData);
 
-            blockLoc.getLevel().addBlockEntity(e);
-            e.spawnToAll();
+                BlockEntityFlowerPot potBlock = (BlockEntityFlowerPot) BlockEntity.createBlockEntity(
+                        BlockEntity.FLOWER_POT,
+                        chunk,
+                        nbt);
+
+                loadChunkAt(loc);
+
+                blockLoc.getLevel().addBlockEntity(potBlock);
+                potBlock.spawnToAll();
+
+            }
+            if (Block.get(typeId, data).getId() == Block.CHEST) {
+                BaseFullChunk chunk = blockLoc.getLevel().getChunk(loc.getFloorX() >> 4, loc.getFloorZ() >> 4);
+                cn.nukkit.nbt.tag.CompoundTag nbt = new cn.nukkit.nbt.tag.CompoundTag()
+                        .putList(new cn.nukkit.nbt.tag.ListTag<>("Items"))
+                        .putString("id", BlockEntity.CHEST)
+                        .putInt("x", (int) loc.x)
+                        .putInt("y", (int) loc.y)
+                        .putInt("z", (int) loc.z);
+                BlockEntityChest e = (BlockEntityChest) BlockEntity.createBlockEntity(
+                        BlockEntity.CHEST,
+                        chunk,
+                        nbt);
+
+                Map<Integer, Item> itemses = new HashMap<>();
+                itemses.put(0, Item.get(Item.ICE, 0, 2));
+                itemses.put(1, Item.get(Item.BUCKET, 10, 1));
+                itemses.put(2, Item.get(Item.BONE, 0, 2));
+                itemses.put(3, Item.get(Item.SUGARCANE, 0, 1));
+                itemses.put(4, Item.get(Item.RED_MUSHROOM, 0, 1));
+                itemses.put(5, Item.get(Item.BROWN_MUSHROOM, 0, 2));
+                itemses.put(6, Item.get(Item.PUMPKIN_SEEDS, 0, 2));
+                itemses.put(7, Item.get(Item.MELON, 0, 1));
+                itemses.put(8, Item.get(Item.SAPLING, 0, 1));
+                itemses.put(9, Item.get(Item.STRING, 0, 12));
+                itemses.put(10, Item.get(Item.POISONOUS_POTATO, 0, 32));
+                itemses.put(11, Item.get(Item.CACTUS, 0, 1));
+
+                e.getInventory().clearAll();
+                e.getInventory().setContents(itemses);
+
+                loadChunkAt(loc);
+
+                blockLoc.getLevel().addBlockEntity(e);
+                e.spawnToAll();
+            }
+            break;
         }
 
     }
