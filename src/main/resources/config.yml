@@ -21,6 +21,7 @@ allowUpdate: false
 ##  Available locales are:
 ##    en_US - English by larryTheCoder.
 ##    de_DE - German by UnexMC
+##    zh_CN - Anders by Chinese
 defaultlanguage: "en_US"
 # Team chatting
 teamChat: true
