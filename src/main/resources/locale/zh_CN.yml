@@ -31,6 +31,7 @@ challengesToCompleteUse: "§e要完成此挑战，请使用"
 challengesInvalidChallengeName: "§c无效的挑战名称！使用/ c help获取更多信息"
 challengesErrorItemsNotThere: "§c所有必需的物品必须在您的岛屿上靠近您!"
 # Errors defaults
+errorMaxReset: "§c你已经达到了岛屿的极限."
 errorUnknownPlayer: "&c未找到玩家."
 errorNoPermission: "&c你没有权限使用这个命令!"
 errorNoIsland: "&c你还没有岛屿!"
